@@ -9,13 +9,13 @@ import turtle
 import time
 import random
 # TODO uncomment the following line to use pyserial package
-#import serial
+import serial
 
 # Note the serial port dev file name
 # need to change based on the particular host machine
 # TODO uncomment the following two lines to initialize serial port
-#serialDevFile = '/dev/cu.usbmodem14201'
-#ser=serial.Serial(serialDevFile, 9600, timeout=0)
+serialDevFile = '/dev/resources/Serial-RW.ino'
+ser=serial.Serial(serialDevFile, 9600, timeout=0)
 
 delay = 0.1
 

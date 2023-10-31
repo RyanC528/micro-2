@@ -116,6 +116,18 @@ while True:
     # elif ......
     #
 
+    # Read control information from the Arduino (joystick and gyro)
+    control_information = ser.read(1).decode("utf-8")
+
+    if control_information == 'w':
+        head.direction = "up"
+    elif control_information == 's':
+        head.direction = "down"
+    elif control_information == 'a':
+        head.direction = "left"
+    elif control_information == 'd':
+        head.direction = "right"
+
     # Check for a collision with the border
     if head.xcor()>290 or head.xcor()<-290 or head.ycor()>290 or head.ycor()<-290:
         time.sleep(1)
@@ -147,6 +159,8 @@ while True:
         # so that the Arduino will beep the buzzer
         # Hint: refer to the example at Serial-RW/pyserial-test.py
 
+        ser.write(b'E')
+        
         # Move the food to a random spot
         x = random.randint(-290, 290)
         y = random.randint(-290, 290)

@@ -1,22 +1,16 @@
 #include <Wire.h>
 
-// Snake game variables
-int snakeX, snakeY; // Snake head position
-int appleX, appleY; // Apple position
-bool appleEaten = false;
-int snakeLength;
-int score;
-
 // Joystick pins
 const int SW_pin = 2; // Digital pin connected to the joystick switch output
 const int X_pin = A0;  // Analog pin connected to the joystick X-axis
 const int Y_pin = A1;  // Analog pin connected to the joystick Y-axis
+const int buzzerPin = 9;
+
+bool appleEaten = false;
 
 // MPU-6050 variables
 const int MPU_addr = 0x68; // I2C address of the MPU-6050
 int16_t GyX;
-
-const int buzzerPin = 9; // Digital pin connected to the active buzzer
 
 void setup() {
   Wire.begin();  // Initialize I2C communication
@@ -27,15 +21,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize built-in LED pin
   digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on (HIGH is the voltage level)
-  pinMode(buzzerPin, OUTPUT); // Initialize the buzzer pin
-
-  // Initialize Snake game variables
-  snakeX = 5;
-  snakeY = 5;
-  appleX = random(1, 9);
-  appleY = random(1, 9);
-  snakeLength = 1;
-  score = 0;
+  pinMode(buzzerPin, OUTPUT);
 }
 
 void loop() {
@@ -55,20 +41,20 @@ void loop() {
   if (joystickSwitch == LOW) { // Joystick switch is pressed
     // Handle joystick input to control the Snake's direction
     if (joystickX < 200) {
-      snakeX--;
+      // Handle left movement
     } else if (joystickX > 800) {
-      snakeX++;
+      // Handle right movement
     } else if (joystickY < 200) {
-      snakeY++;
+      // Handle up movement
     } else if (joystickY > 800) {
-      snakeY--;
+      // Handle down movement
     }
   } else {
     // Handle MPU-6050 input to control the Snake's direction
     if (GyX > 1000) {
-      snakeX--;
+      // Handle left movement
     } else if (GyX < -1000) {
-      snakeX++;
+      // Handle right movement
     }
   }
 

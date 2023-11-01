@@ -1,27 +1,28 @@
 #include <Wire.h>
 
 // Joystick pins
-const int SW_pin = 2; // Digital pin connected to the joystick switch output
-const int X_pin = A0;  // Analog pin connected to the joystick X-axis
-const int Y_pin = A1;  // Analog pin connected to the joystick Y-axis
+const int SW_pin = 2;   // Digital pin connected to the joystick switch output
+const int X_pin = A11;  // Analog pin connected to the joystick X-axis
+const int Y_pin = A10;  // Analog pin connected to the joystick Y-axis
 const int buzzerPin = 9;
 
 bool appleEaten = false;
 
 // MPU-6050 variables
-const int MPU_addr = 0x68; // I2C address of the MPU-6050
+const int MPU_addr = 0x68;  // I2C address of the MPU-6050
 int16_t GyX;
 
 void setup() {
   Wire.begin();  // Initialize I2C communication
   Wire.beginTransmission(MPU_addr);
-  Wire.write(0x6B); // PWR_MGMT_1 register
-  Wire.write(0);    // Set to zero (wakes up the MPU-6050)
+  Wire.write(0x6B);  // PWR_MGMT_1 register
+  Wire.write(0);     // Set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
   Serial.begin(9600);
-  pinMode(LED_BUILTIN, OUTPUT);  // Initialize built-in LED pin
-  digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on (HIGH is the voltage level)
+  pinMode(LED_BUILTIN, OUTPUT);     // Initialize built-in LED pin
+  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (HIGH is the voltage level)
   pinMode(buzzerPin, OUTPUT);
+  pinMode(SW_pin, OUTPUT);
 }
 
 void loop() {
@@ -30,35 +31,52 @@ void loop() {
   int joystickY = analogRead(Y_pin);
   int joystickSwitch = digitalRead(SW_pin);
 
+  int control = 0;
+
+  if(joystickSwitch == HIGH){
+    control = 1 - control;
+  }
+
   // Read from the MPU-6050 sensor:
   Wire.beginTransmission(MPU_addr);
-  Wire.write(0x43); // Starting with register 0x43 (GYRO_XOUT_H)
+  Wire.write(0x43);  // Starting with register 0x43 (GYRO_XOUT_H)
   Wire.endTransmission(false);
-  Wire.requestFrom(MPU_addr, 2, true); // Request 2 registers
+  Wire.requestFrom(MPU_addr, 2, true);  // Request 2 registers
   GyX = Wire.read() << 8 | Wire.read();
 
   // Use joystick or MPU-6050 to control the Snake's movement
-  if (joystickSwitch == LOW) { // Joystick switch is pressed
+  if (control == 0) {  // Joystick switch is pressed
     // Handle joystick input to control the Snake's direction
     if (joystickX < 200) {
       // Handle left movement
-    } else if (joystickX > 800) {
+      Serial.write("a");
+    } if (joystickX > 800) {
       // Handle right movement
-    } else if (joystickY < 200) {
+      Serial.write("d");
+    } if (joystickY < 200) {
       // Handle up movement
-    } else if (joystickY > 800) {
+      Serial.write("w");
+    } if (joystickY > 800) {
       // Handle down movement
-    }
-  } else {
-    // Handle MPU-6050 input to control the Snake's direction
-    if (GyX > 1000) {
-      // Handle left movement
-    } else if (GyX < -1000) {
-      // Handle right movement
-    }
-  }
+      Serial.write("s");
 
-  if (Serial.available() > 0) {
+    }
+  } //else {
+    // Handle MPU-6050 input to control the Snake's direction
+    //if (GyX > 1000) {
+    //  Serial.write("a");
+    //} else if (GyX < -1000) {
+    //  Serial.write("d");
+    //}
+    //else if (GyY < 1000) {
+    //  Serial.write("w");
+    //}
+    //else if (GyY < -1000) {
+    //  Serial.write("s");
+    //}
+ // }
+
+  if (Serial.available()) {
     // Read the incoming character
     char incomingChar = Serial.read();
 
@@ -74,6 +92,6 @@ void loop() {
     delay(100);
     digitalWrite(buzzerPin, LOW);
   }
-
+  
   appleEaten = false;
 }

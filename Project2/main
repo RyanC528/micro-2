@@ -12,7 +12,7 @@ bool appleEaten = false;
 
 // MPU-6050 variables
 const int MPU_addr = 0x68;  // I2C address of the MPU-6050
-int16_t GyX;
+int16_t AcX, AcY, GyX, GyY;
 int joystickX = 0;
 int joystickY = 0;
 
@@ -35,7 +35,7 @@ void loop() {
   joystickY = analogRead(Y_pin);
   int joystickSwitch = digitalRead(SW_pin);
 
-  int control = 0;
+  int control = 1;
 
   if(joystickSwitch == HIGH){
     control = 1 - control;
@@ -43,10 +43,13 @@ void loop() {
 
   // Read from the MPU-6050 sensor:
   Wire.beginTransmission(MPU_addr);
-  Wire.write(0x43);  // Starting with register 0x43 (GYRO_XOUT_H)
+  Wire.write(0x3B);  // Starting with register 0x43 (GYRO_XOUT_H)
   Wire.endTransmission(false);
-  Wire.requestFrom(MPU_addr, 2, true);  // Request 2 registers
-  GyX = Wire.read() << 8 | Wire.read();
+  Wire.requestFrom(MPU_addr, 4, true);  // Request 2 registers
+  AcX = Wire.read() << 8 | Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
+  AcY = Wire.read() << 8 | Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
+  GyX = Wire.read() << 8 | Wire.read();  // 0x43
+  GyY = Wire.read() << 8 | Wire.read();  // 0x45
 
   // Use joystick or MPU-6050 to control the Snake's movement
   if (control == 0) {  // Joystick switch is pressed
@@ -66,22 +69,26 @@ void loop() {
 
     }
 
-    delay(100);
-
-  } //else {
+  } else {
     // Handle MPU-6050 input to control the Snake's direction
-    //if (GyX > 1000) {
-    //  Serial.write("a");
-    //} else if (GyX < -1000) {
-    //  Serial.write("d");
-    //}
-    //else if (GyY < 1000) {
-    //  Serial.write("w");
-    //}
-    //else if (GyY < -1000) {
-    //  Serial.write("s");
-    //}
- // }
+    if (AcY > 1000 || AcX > 1000){
+      Serial.write(" Movement Detected ");
+    if (GyX > 1000) {
+      Serial.write("a");
+    } 
+    if (GyX < -1000) {
+      Serial.write("d");
+    }
+    if (GyY < 1000) {
+      Serial.write("w");
+    }
+    if (GyY < -1000) {
+      Serial.write("s");
+    }
+ }
+}
+
+  delay(100);
 
   if (Serial.available()) {
     // Read the incoming character

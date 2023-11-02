@@ -1,9 +1,11 @@
 #include <Wire.h>
 
+#define X_pin A11
+#define Y_pin A10
+
 // Joystick pins
 const int SW_pin = 2;   // Digital pin connected to the joystick switch output
-const int X_pin = A11;  // Analog pin connected to the joystick X-axis
-const int Y_pin = A10;  // Analog pin connected to the joystick Y-axis
+
 const int buzzerPin = 9;
 
 bool appleEaten = false;
@@ -11,6 +13,8 @@ bool appleEaten = false;
 // MPU-6050 variables
 const int MPU_addr = 0x68;  // I2C address of the MPU-6050
 int16_t GyX;
+int joystickX = 0;
+int joystickY = 0;
 
 void setup() {
   Wire.begin();  // Initialize I2C communication
@@ -27,8 +31,8 @@ void setup() {
 
 void loop() {
   // Read from the joystick:
-  int joystickX = analogRead(X_pin);
-  int joystickY = analogRead(Y_pin);
+  joystickX = analogRead(X_pin);
+  joystickY = analogRead(Y_pin);
   int joystickSwitch = digitalRead(SW_pin);
 
   int control = 0;
@@ -61,6 +65,9 @@ void loop() {
       Serial.write("s");
 
     }
+
+    delay(100);
+
   } //else {
     // Handle MPU-6050 input to control the Snake's direction
     //if (GyX > 1000) {

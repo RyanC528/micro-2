@@ -14,7 +14,7 @@ import serial
 # Note the serial port dev file name
 # need to change based on the particular host machine
 # TODO uncomment the following two lines to initialize serial port
-serialDevFile = '/dev/resources/Serial-RW.ino'
+serialDevFile = 'COM4' //Make sure what port you're using, could be COM3 or COM4
 ser=serial.Serial(serialDevFile, 9600, timeout=0)
 
 delay = 0.1

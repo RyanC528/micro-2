@@ -5,7 +5,7 @@
 
 // Joystick pins
 const int SW_pin = 2;   // Digital pin connected to the joystick switch output
-
+const int buttonPin = 13;
 const int buzzerPin = 9;
 
 bool appleEaten = false;
@@ -15,6 +15,8 @@ const int MPU_addr = 0x68;  // I2C address of the MPU-6050
 int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
 int joystickX = 0;
 int joystickY = 0;
+int button = 0;
+int control = 0;
 
 void setup() {
   Wire.begin();  // Initialize I2C communication
@@ -27,6 +29,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (HIGH is the voltage level)
   pinMode(buzzerPin, OUTPUT);
   pinMode(SW_pin, INPUT);
+  pinMode(buttonPin, OUTPUT);
 }
 
 void loop() {
@@ -35,22 +38,22 @@ void loop() {
   joystickY = analogRead(Y_pin);
   int joystickSwitch = digitalRead(SW_pin);
 
-  int control = 1;
+  button = digitalRead(buttonPin);
 
-  if(joystickSwitch == HIGH){
+  if(button == HIGH){
     control = 1 - control;
+    delay(100);
   }
 
   // Read from the MPU-6050 sensor:
   Wire.beginTransmission(MPU_addr);
   Wire.write(0x3B);  // Starting with register 0x43 (GYRO_XOUT_H)
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU_addr, 8, true);  // Request 2 registers
+  Wire.requestFrom(MPU_addr, 14, true);  // Request 2 registers
   AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
   AcY=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
   AcZ=Wire.read()<<8|Wire.read();  // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
   Tmp=Wire.read()<<8|Wire.read();  // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
-  //Tmp isnt used in code but the code breaks if not included
+  Wire.endTransmission(false);
   GyX=Wire.read()<<8|Wire.read();  // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
   GyY=Wire.read()<<8|Wire.read();  // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   GyZ=Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
@@ -76,19 +79,18 @@ void loop() {
   } else {
     // Handle MPU-6050 input to control the Snake's direction
     if (AcY > 1000 || AcX > 1000){
-      Serial.write(" Movement Detected \n");
-    if (GyX > 1000) {
-      Serial.write("a");
-    } 
-    if (GyX < -1000) {
-      Serial.write("d");
-    }
-    if (GyY < 1000) {
-      Serial.write("w");
-    }
-    if (GyY < -1000) {
-      Serial.write("s");
-    }
+      if (GyX > 1000) {
+        Serial.write("a");
+      } 
+      if (GyX < -1000) {
+        Serial.write("d");
+      }
+      if (GyY < 1000) {
+        Serial.write("w");
+      }
+      if (GyY < -1000) {
+        Serial.write("s");
+      }
     delay(100);
  }
 }

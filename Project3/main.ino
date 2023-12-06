@@ -77,22 +77,18 @@ void loop() {
   lcd.setCursor(0, 1);
   lcd.print(soundSensorValue);
 
-  // Use the sound sensor value to adjust fan speed or perform FFT processing
-  // Example: If soundSensorValue exceeds a certain threshold, increase fan speed
-  if (soundSensorValue > SOUND_THRESHOLD) {
-    // Perform FFT analysis and identify the peak frequency
-    double frequencies[SAMPLES];
-    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute();
-    FFT.MajorPeak(frequencies, SAMPLES, SAMPLING_FREQUENCY);
-
-    // Check if the peak frequency matches the target notes with the allowed error
-    if (isInRange(frequencies[0], TARGET_NOTE_C4)) {
-      increaseFanSpeed();
-    } else if (isInRange(frequencies[0], TARGET_NOTE_A4)) {
-      decreaseFanSpeed();
-    }
+// Use the sound sensor value to adjust fan speed
+// Example: If soundSensorValue exceeds a certain threshold, increase fan speed
+if (soundSensorValue > SOUND_THRESHOLD) {
+  // Perform basic frequency analysis using analogRead values
+  int frequency = map(soundSensorValue, 0, 1023, 20, 2000); // Map analogRead range to frequency range
+  // Check if the frequency matches the target notes with the allowed error
+  if (isInRange(frequency, TARGET_NOTE_C4)) {
+    increaseFanSpeed();
+  } else if (isInRange(frequency, TARGET_NOTE_A4)) {
+    decreaseFanSpeed();
   }
+}
 
   // Other main loop tasks...
 }

@@ -1,6 +1,5 @@
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include <RTClib.h>
+#include <DS3231.h>
 #include <ArduinoFFT.h>
 
 // Define pins
@@ -28,8 +27,8 @@
 #define FREQUENCY_ERROR 0.02 // 2%
 
 // Initialize libraries
-RTC_DS1307 rtc;
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+DS3231 clock;
+RTCDateTime dt;
 ArduinoFFT FFT = ArduinoFFT();
 
 // Global variables
@@ -45,20 +44,12 @@ void setup() {
   pinMode(MOTOR_ENABLE_PIN, OUTPUT);
   stopMotor();
 
-  // Set up LCD display
-  lcd.begin(16, 2);
-  lcd.print("Initializing...");
-
   // Set up RTC
-  Wire.begin();
-  if (!rtc.begin()) {
-    Serial.println("Couldn't find RTC");
-    while (1);
-  }
+  clock.begin();
 
-  if (rtc.lostPower()) {
+  if (clock.lostPower()) {
     Serial.println("RTC lost power, let's set the time!");
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    clock.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 
   // Set up button
@@ -71,6 +62,18 @@ void setup() {
 void loop() {
   // Main loop tasks...
 
+  // Read the current time from the RTC
+  dt = clock.getDateTime();
+
+  // Print the time to the serial monitor
+  Serial.print("Time: ");
+  Serial.print(dt.year);   Serial.print("-");
+  Serial.print(dt.month);  Serial.print("-");
+  Serial.print(dt.day);    Serial.print(" ");
+  Serial.print(dt.hour);   Serial.print(":");
+  Serial.print(dt.minute); Serial.print(":");
+  Serial.println(dt.second);
+
   // Read the value from the sound sensor analog pin
   int soundSensorValue = analogRead(SOUND_SENSOR_PIN);
 
@@ -82,36 +85,27 @@ void loop() {
   // Example: If soundSensorValue exceeds a certain threshold, increase fan speed
   if (soundSensorValue > SOUND_THRESHOLD) {
     // Perform FFT analysis and identify the peak frequency
-    double frequencies[SAMPLES];
-    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute();
-    FFT.MajorPeak(frequencies, SAMPLES, SAMPLING_FREQUENCY);
+    double real[SAMPLES];
+    double imag[SAMPLES];
+    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD, FFT_INVERT);
+    FFT.Compute(soundSensorValue, SAMPLES, SAMPLING_FREQUENCY, real, imag);
+    FFT.ComplexToMagnitude(real, imag, SAMPLES);
+    int peak = FFT.MajorPeak(real, SAMPLES, SAMPLING_FREQUENCY);
 
     // Check if the peak frequency matches the target notes with the allowed error
-    if (isInRange(frequencies[0], TARGET_NOTE_C4)) {
-      increaseFanSpeed();
-    } else if (isInRange(frequencies[0], TARGET_NOTE_A4)) {
-      decreaseFanSpeed();
+    if (isInRange(peak, TARGET_NOTE_C4)) {
+      increaseFanSpeed(); // Increase fan speed for "C4" note
+    } else if (isInRange(peak, TARGET_NOTE_A4)) {
+      decreaseFanSpeed(); // Decrease fan speed for "A4" note
     }
   }
 
   // Other main loop tasks...
+  delay(1000);
 }
 
 void updateInfoISR() {
-  DateTime now = rtc.now();
-
-  // Display the time on the LCD
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Time: ");
-  lcd.print(now.hour(), DEC);
-  lcd.print(':');
-  lcd.print(now.minute(), DEC);
-  lcd.print(':');
-  lcd.print(now.second(), DEC);
-
-  // Other information update tasks...
+  // Update other information using the ISR if needed
 }
 
 void stopMotor() {
@@ -169,9 +163,8 @@ void updateMotorSpeed() {
   }
 }
 
-// Function to check if a value is within a specified range with an allowed error
-bool isInRange(double value, double target) {
-  double lowerBound = target - (target * FREQUENCY_ERROR);
-  double upperBound = target + (target * FREQUENCY_ERROR);
+bool isInRange(int value, int target) {
+  int lowerBound = target - int(target * FREQUENCY_ERROR);
+  int upperBound = target + int(target * FREQUENCY_ERROR);
   return (value >= lowerBound && value <= upperBound);
 }

@@ -33,7 +33,8 @@ void setup() {
   pinMode(MOTOR_PIN1, OUTPUT);
   pinMode(MOTOR_PIN2, OUTPUT);
   pinMode(MOTOR_ENABLE_PIN, OUTPUT);
-  
+  stopFan(); // Ensure the fan starts in a stopped state
+
   // Set up LCD display
   lcd.begin(16, 2);
   lcd.print("Initializing...");
@@ -61,10 +62,74 @@ void setup() {
 
 void loop() {
   // Main loop tasks...
+  // You can add other tasks here, if needed
 }
 
 void updateInfoISR() {
   // Code to update information (clock, rpm, direction) every second
+  DateTime now = rtc.now();
+
+  // Display the time on the LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Time: ");
+  lcd.print(now.hour(), DEC);
+  lcd.print(':');
+  lcd.print(now.minute(), DEC);
+  lcd.print(':');
+  lcd.print(now.second(), DEC);
+
+  // Code to handle sound detection and adjust fan speed
+  // Implement sound sensor logic and FFT processing here
+
+  // Example: if (detectedNote == "C4")
+  // Increase fan speed
+  increaseFanSpeed();
+
+  // Example: if (detectedNote == "A4")
+  // Decrease fan speed
+  decreaseFanSpeed();
 }
 
-// Additional functions for different steps...
+// Function to stop the fan
+void stopFan() {
+  analogWrite(MOTOR_PIN1, 0);
+  analogWrite(MOTOR_PIN2, 0);
+}
+
+// Function to increase fan speed
+void increaseFanSpeed() {
+  if (fanSpeed < 3) {
+    fanSpeed++;
+    updateMotorSpeed();
+  }
+}
+
+// Function to decrease fan speed
+void decreaseFanSpeed() {
+  if (fanSpeed > 0) {
+    fanSpeed--;
+    updateMotorSpeed();
+  }
+}
+
+// Function to update motor speed based on fanSpeed variable
+void updateMotorSpeed() {
+  switch (fanSpeed) {
+    case 0:
+      stopFan();
+      break;
+    case 1:
+      analogWrite(MOTOR_PIN1, HALF_SPEED);
+      analogWrite(MOTOR_PIN2, 0);
+      break;
+    case 2:
+      analogWrite(MOTOR_PIN1, FULL_SPEED);
+      analogWrite(MOTOR_PIN2, 0);
+      break;
+    case 3:
+      analogWrite(MOTOR_PIN1, FULL_SPEED);
+      analogWrite(MOTOR_PIN2, HALF_SPEED);
+      break;
+  }
+}

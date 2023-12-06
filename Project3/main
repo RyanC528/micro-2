@@ -4,9 +4,9 @@
 #include <ArduinoFFT.h>
 
 // Define pins
-#define MOTOR_PIN1 9 // Motor control pin 1
-#define MOTOR_PIN2 10 // Motor control pin 2
-#define MOTOR_ENABLE_PIN 8 // Motor enable pin on L293D
+#define MOTOR_PIN1 9
+#define MOTOR_PIN2 10
+#define MOTOR_ENABLE_PIN 8
 #define SOUND_SENSOR_PIN A0
 #define BUTTON_PIN 2 // Example button pin, change as needed
 
@@ -15,6 +15,17 @@
 #define THREE_QUARTER_SPEED 192
 #define HALF_SPEED 128
 #define STOPPED 0
+
+// Sound sensor thresholds
+#define SOUND_THRESHOLD 500
+#define SOUND_THRESHOLD_LOW 400
+
+// Frequency analysis parameters
+#define SAMPLES 256
+#define SAMPLING_FREQUENCY 1000
+#define TARGET_NOTE_C4 262
+#define TARGET_NOTE_A4 440
+#define FREQUENCY_ERROR 0.02 // 2%
 
 // Initialize libraries
 RTC_DS1307 rtc;
@@ -26,14 +37,13 @@ volatile bool fanRunning = false;
 volatile int fanSpeed = STOPPED;
 
 void setup() {
-  // Initialize serial communication for debugging
   Serial.begin(9600);
 
   // Set up DC motor
   pinMode(MOTOR_PIN1, OUTPUT);
   pinMode(MOTOR_PIN2, OUTPUT);
   pinMode(MOTOR_ENABLE_PIN, OUTPUT);
-  stopFan(); // Ensure the fan starts in a stopped state
+  stopMotor();
 
   // Set up LCD display
   lcd.begin(16, 2);
@@ -56,17 +66,39 @@ void setup() {
 
   // Set up timer interrupt
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), updateInfoISR, RISING);
-
-  // Other setup tasks...
 }
 
 void loop() {
   // Main loop tasks...
-  // You can add other tasks here, if needed
+
+  // Read the value from the sound sensor analog pin
+  int soundSensorValue = analogRead(SOUND_SENSOR_PIN);
+
+  // Print the sound sensor value to the serial monitor for debugging
+  Serial.print("Sound Sensor Value: ");
+  Serial.println(soundSensorValue);
+
+  // Use the sound sensor value to adjust fan speed or perform FFT processing
+  // Example: If soundSensorValue exceeds a certain threshold, increase fan speed
+  if (soundSensorValue > SOUND_THRESHOLD) {
+    // Perform FFT analysis and identify the peak frequency
+    double frequencies[SAMPLES];
+    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    FFT.Compute();
+    FFT.MajorPeak(frequencies, SAMPLES, SAMPLING_FREQUENCY);
+
+    // Check if the peak frequency matches the target notes with the allowed error
+    if (isInRange(frequencies[0], TARGET_NOTE_C4)) {
+      increaseFanSpeed();
+    } else if (isInRange(frequencies[0], TARGET_NOTE_A4)) {
+      decreaseFanSpeed();
+    }
+  }
+
+  // Other main loop tasks...
 }
 
 void updateInfoISR() {
-  // Code to update information (clock, rpm, direction) every second
   DateTime now = rtc.now();
 
   // Display the time on the LCD
@@ -79,25 +111,33 @@ void updateInfoISR() {
   lcd.print(':');
   lcd.print(now.second(), DEC);
 
-  // Code to handle sound detection and adjust fan speed
-  // Implement sound sensor logic and FFT processing here
-
-  // Example: if (detectedNote == "C4")
-  // Increase fan speed
-  increaseFanSpeed();
-
-  // Example: if (detectedNote == "A4")
-  // Decrease fan speed
-  decreaseFanSpeed();
+  // Other information update tasks...
 }
 
-// Function to stop the fan
-void stopFan() {
+void stopMotor() {
   analogWrite(MOTOR_PIN1, 0);
   analogWrite(MOTOR_PIN2, 0);
+  digitalWrite(MOTOR_ENABLE_PIN, LOW);
 }
 
-// Function to increase fan speed
+void runMotorHalfSpeed() {
+  analogWrite(MOTOR_PIN1, 128); // Adjust the value based on your motor characteristics
+  analogWrite(MOTOR_PIN2, 0);
+  digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+}
+
+void runMotorThreeQuarterSpeed() {
+  analogWrite(MOTOR_PIN1, 192); // Adjust the value based on your motor characteristics
+  analogWrite(MOTOR_PIN2, 0);
+  digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+}
+
+void runMotorFullSpeed() {
+  analogWrite(MOTOR_PIN1, 255); // Adjust the value based on your motor characteristics
+  analogWrite(MOTOR_PIN2, 0);
+  digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+}
+
 void increaseFanSpeed() {
   if (fanSpeed < 3) {
     fanSpeed++;
@@ -105,7 +145,6 @@ void increaseFanSpeed() {
   }
 }
 
-// Function to decrease fan speed
 void decreaseFanSpeed() {
   if (fanSpeed > 0) {
     fanSpeed--;
@@ -113,23 +152,26 @@ void decreaseFanSpeed() {
   }
 }
 
-// Function to update motor speed based on fanSpeed variable
 void updateMotorSpeed() {
   switch (fanSpeed) {
     case 0:
-      stopFan();
+      stopMotor();
       break;
     case 1:
-      analogWrite(MOTOR_PIN1, HALF_SPEED);
-      analogWrite(MOTOR_PIN2, 0);
+      runMotorHalfSpeed();
       break;
     case 2:
-      analogWrite(MOTOR_PIN1, FULL_SPEED);
-      analogWrite(MOTOR_PIN2, 0);
+      runMotorThreeQuarterSpeed();
       break;
     case 3:
-      analogWrite(MOTOR_PIN1, FULL_SPEED);
-      analogWrite(MOTOR_PIN2, HALF_SPEED);
+      runMotorFullSpeed();
       break;
   }
+}
+
+// Function to check if a value is within a specified range with an allowed error
+bool isInRange(double value, double target) {
+  double lowerBound = target - (target * FREQUENCY_ERROR);
+  double upperBound = target + (target * FREQUENCY_ERROR);
+  return (value >= lowerBound && value <= upperBound);
 }

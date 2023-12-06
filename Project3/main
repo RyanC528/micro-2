@@ -39,7 +39,7 @@ volatile int fanSpeed = STOPPED;
 void setup() {
   Serial.begin(9600);
 
-  // Set up DC motor
+  // Set up DC motor using L293D
   pinMode(MOTOR_PIN1, OUTPUT);
   pinMode(MOTOR_PIN2, OUTPUT);
   pinMode(MOTOR_ENABLE_PIN, OUTPUT);
@@ -115,27 +115,27 @@ void updateInfoISR() {
 }
 
 void stopMotor() {
-  analogWrite(MOTOR_PIN1, 0);
-  analogWrite(MOTOR_PIN2, 0);
-  digitalWrite(MOTOR_ENABLE_PIN, LOW);
+  digitalWrite(MOTOR_PIN1, LOW);
+  digitalWrite(MOTOR_PIN2, LOW);
+  analogWrite(MOTOR_ENABLE_PIN, 0);
 }
 
 void runMotorHalfSpeed() {
-  analogWrite(MOTOR_PIN1, 128); // Adjust the value based on your motor characteristics
-  analogWrite(MOTOR_PIN2, 0);
-  digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+  digitalWrite(MOTOR_PIN1, HIGH);
+  digitalWrite(MOTOR_PIN2, LOW);
+  analogWrite(MOTOR_ENABLE_PIN, HALF_SPEED);
 }
 
 void runMotorThreeQuarterSpeed() {
-  analogWrite(MOTOR_PIN1, 192); // Adjust the value based on your motor characteristics
-  analogWrite(MOTOR_PIN2, 0);
-  digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+  digitalWrite(MOTOR_PIN1, LOW);
+  digitalWrite(MOTOR_PIN2, HIGH);
+  analogWrite(MOTOR_ENABLE_PIN, THREE_QUARTER_SPEED);
 }
 
 void runMotorFullSpeed() {
-  analogWrite(MOTOR_PIN1, 255); // Adjust the value based on your motor characteristics
-  analogWrite(MOTOR_PIN2, 0);
-  digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+  digitalWrite(MOTOR_PIN1, HIGH);
+  digitalWrite(MOTOR_PIN2, HIGH);
+  analogWrite(MOTOR_ENABLE_PIN, FULL_SPEED);
 }
 
 void increaseFanSpeed() {

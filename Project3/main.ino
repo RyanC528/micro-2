@@ -56,7 +56,6 @@ void setup() {
 
   //Set up I2C wire for RTC
 
-  Wire.begin();
   rtc.begin();
 
   // Set up RTC

@@ -6,9 +6,6 @@
 RTC_DS3231 rtc;
 arduinoFFT FFT = arduinoFFT();
 
-// Define LCD pins
-LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
-
 // Define pins for DC motor using L293D
 #define MOTOR_ENABLE_PIN 5
 #define MOTOR_PIN1 4
@@ -16,6 +13,13 @@ LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
 
 #define SOUND_SENSOR_PIN A0
 #define BUTTON_PIN 2 // Example button pin, change as needed
+
+#define LCD_D7 13
+#define LCD_D6 12
+#define LCD_D5 11
+#define LCD_D4 10
+#define LCD_ENABLE 32
+#define LCD_READ 33
 
 // Motor speed levels
 #define FULL_SPEED 255
@@ -34,6 +38,9 @@ LiquidCrystal lcd(8, 9, 10, 11, 12, 13);
 #define TARGET_NOTE_A4 440
 #define FREQUENCY_ERROR 0.02 // 2%
 
+// Define LCD pins
+LiquidCrystal lcd(LCD_READ, LCD_ENABLE, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+
 // Global variables
 volatile bool fanRunning = false;
 volatile int fanSpeed = STOPPED;
@@ -46,6 +53,11 @@ void setup() {
   pinMode(MOTOR_PIN1, OUTPUT);
   pinMode(MOTOR_PIN2, OUTPUT);
   stopMotor();
+
+  //Set up I2C wire for RTC
+
+  Wire.begin();
+  rtc.begin();
 
   // Set up RTC
   if (!rtc.begin()) {

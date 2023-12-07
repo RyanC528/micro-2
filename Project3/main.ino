@@ -73,8 +73,6 @@ void setup() {
 }
 
 void loop() {
-  // Main loop tasks...
-
   // Read the value from the sound sensor analog pin
   int soundSensorValue = analogRead(SOUND_SENSOR_PIN);
 
@@ -86,10 +84,17 @@ void loop() {
 
   // Use the sound sensor value to adjust fan speed
   if (soundSensorValue > SOUND_THRESHOLD) {
-    // ... (rest of your sound sensor logic remains unchanged)
+    // Perform basic frequency analysis using analogRead values
+    int frequency = map(soundSensorValue, 0, 1023, 20, 2000); // Map analogRead range to frequency range
+    // Check if the frequency matches the target notes with the allowed error
+    if (isInRange(frequency, TARGET_NOTE_C4)) {
+      increaseFanSpeed();
+    } else if (isInRange(frequency, TARGET_NOTE_A4)) {
+      decreaseFanSpeed();
+    }
   }
 
-  // ... (rest of your main loop logic remains unchanged)
+  // Other main loop tasks...
 }
 
 void updateInfoISR() {

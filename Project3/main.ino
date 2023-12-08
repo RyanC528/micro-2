@@ -7,7 +7,7 @@ RTC_DS1307 rtc;
 arduinoFFT FFT = arduinoFFT();
 
 // Define pins for DC motor using L293D
-#define MOTOR_ENABLE_PIN 5
+#define MOTOR_ENABLE_PIN A1
 #define MOTOR_PIN1 4
 #define MOTOR_PIN2 3
 
@@ -20,7 +20,7 @@ arduinoFFT FFT = arduinoFFT();
 #define LCD_D5 11
 #define LCD_D4 10
 #define LCD_ENABLE 32
-#define LCD_READ 28
+#define LCD_READ 33
 
 // Motor speed levels
 #define FULL_SPEED 255
@@ -75,7 +75,7 @@ void setup() {
 
 void loop() {
   // Read the value from the sound sensor analog pin
-  int soundSensorValue = analogRead(SOUND_SENSOR_APIN);
+  int soundSensorValue = ssvSimulation();
 
   // Print the sound sensor value to the LCD for debugging
   lcd.clear();
@@ -168,6 +168,30 @@ void runMotorFullSpeed() {
   digitalWrite(MOTOR_PIN1, HIGH);
   digitalWrite(MOTOR_PIN2, HIGH);
   analogWrite(MOTOR_ENABLE_PIN, FULL_SPEED);
+}
+
+int ssvSimulation(){// used to test rest of circuit while issue with dianosing sound circuit
+    DateTime now = rtc.now();
+    int testFreq = 0;
+
+      if(now.second() < 20){
+
+        testFreq = 262;
+
+        return testFreq;
+      }
+      if(now.second() > 40){
+
+        testFreq = 440;
+
+        return testFreq;
+      }
+      if((now.second() > 20) && ( now.second() < 40)){
+
+        testFreq = 600 ;
+
+        return testFreq;
+      }
 }
 
 // Function to check if a value is within a specified range with an allowed error

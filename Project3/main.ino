@@ -20,7 +20,7 @@ arduinoFFT FFT = arduinoFFT();
 #define LCD_D5 11
 #define LCD_D4 10
 #define LCD_ENABLE 32
-#define LCD_READ 33
+#define LCD_READ 28
 
 // Motor speed levels
 #define FULL_SPEED 255

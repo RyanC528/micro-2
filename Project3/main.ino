@@ -75,7 +75,7 @@ void setup() {
 
 void loop() {
   // Read the value from the sound sensor analog pin
-  int soundSensorValue = analogRead(SOUND_SENSOR_PIN);
+  int soundSensorValue = analogRead(SOUND_SENSOR_APIN);
 
   // Print the sound sensor value to the LCD for debugging
   lcd.clear();
@@ -95,22 +95,19 @@ void loop() {
       decreaseFanSpeed();
     }
   }
-  
 
   updateInfoISR();
 
-  delay(50);//added delay to stop serial overload
-
+  delay(50); // added delay to stop serial overload
 }
 
 void updateInfoISR() {
   DateTime now = rtc.now();
 
   // Display the time on the LCD
-  
   lcd.setCursor(0, 2);
   lcd.print("Time:");
-  lcd.print(now.hour() - 1, DEC); //fixed an issue possibly caused by daylight savings
+  lcd.print(now.hour() - 1, DEC); // fixed an issue possibly caused by daylight savings
   lcd.print(':');
   lcd.print(now.minute(), DEC);
   lcd.print(':');

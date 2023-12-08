@@ -78,7 +78,7 @@ void loop() {
 
   // Print the sound sensor value to the LCD for debugging
   lcd.clear();
-  lcd.print("Sound Sensor Value:");
+  lcd.print("SSV:");
   lcd.setCursor(0, 1);
   lcd.print(soundSensorValue);
 
@@ -94,7 +94,7 @@ void loop() {
     }
   }
 
-  // Other main loop tasks...
+  //updateInfoISR();
 }
 
 void updateInfoISR() {
@@ -103,7 +103,7 @@ void updateInfoISR() {
   // Display the time on the LCD
   lcd.clear();
   lcd.print("Time:");
-  lcd.setCursor(0, 1);
+  lcd.setCursor(0, 2);
   lcd.print(now.hour(), DEC);
   lcd.print(':');
   lcd.print(now.minute(), DEC);

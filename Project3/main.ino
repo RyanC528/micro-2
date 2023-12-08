@@ -80,7 +80,6 @@ void loop() {
   // Print the sound sensor value to the LCD for debugging
   lcd.clear();
   lcd.print("SSV: ");
-  lcd.setCursor(0, 1);
   lcd.print(soundSensorValue);
   lcd.print(" Hz");
 

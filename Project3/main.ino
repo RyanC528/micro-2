@@ -11,7 +11,8 @@ arduinoFFT FFT = arduinoFFT();
 #define MOTOR_PIN1 4
 #define MOTOR_PIN2 3
 
-#define SOUND_SENSOR_PIN A0
+#define SOUND_SENSOR_APIN A0
+#define SOUND_SENSOR_DPIN 2
 #define BUTTON_PIN 2 // Example button pin, change as needed
 
 #define LCD_D7 13
@@ -78,9 +79,10 @@ void loop() {
 
   // Print the sound sensor value to the LCD for debugging
   lcd.clear();
-  lcd.print("SSV:");
+  lcd.print("SSV: ");
   lcd.setCursor(0, 1);
   lcd.print(soundSensorValue);
+  lcd.print(" Hz");
 
   // Use the sound sensor value to adjust fan speed
   if (soundSensorValue > SOUND_THRESHOLD) {
@@ -93,18 +95,22 @@ void loop() {
       decreaseFanSpeed();
     }
   }
+  
 
-  //updateInfoISR();
+  updateInfoISR();
+
+  delay(50);//added delay to stop serial overload
+
 }
 
 void updateInfoISR() {
   DateTime now = rtc.now();
 
   // Display the time on the LCD
-  lcd.clear();
-  lcd.print("Time:");
+  
   lcd.setCursor(0, 2);
-  lcd.print(now.hour(), DEC);
+  lcd.print("Time:");
+  lcd.print(now.hour() - 1, DEC); //fixed an issue possibly caused by daylight savings
   lcd.print(':');
   lcd.print(now.minute(), DEC);
   lcd.print(':');

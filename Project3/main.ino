@@ -7,12 +7,11 @@ RTC_DS1307 rtc;
 arduinoFFT FFT = arduinoFFT();
 
 // Define pins for DC motor using L293D
-#define MOTOR_ENABLE_PIN A1
+#define MOTOR_ENABLE_PIN 5
 #define MOTOR_PIN1 4
 #define MOTOR_PIN2 3
 
 #define SOUND_SENSOR_APIN A0
-#define SOUND_SENSOR_DPIN 2
 #define BUTTON_PIN 2 // Example button pin, change as needed
 
 #define LCD_D7 13
@@ -20,7 +19,7 @@ arduinoFFT FFT = arduinoFFT();
 #define LCD_D5 11
 #define LCD_D4 10
 #define LCD_ENABLE 32
-#define LCD_READ 33
+#define LCD_READ 28
 
 // Motor speed levels
 #define FULL_SPEED 255
@@ -75,13 +74,7 @@ void setup() {
 
 void loop() {
   // Read the value from the sound sensor analog pin
-  int soundSensorValue = ssvSimulation();
-
-  // Print the sound sensor value to the LCD for debugging
-  lcd.clear();
-  lcd.print("SSV: ");
-  lcd.print(soundSensorValue);
-  lcd.print(" Hz");
+  int soundSensorValue = analogRead(SOUND_SENSOR_APIN);
 
   // Use the sound sensor value to adjust fan speed
   if (soundSensorValue > SOUND_THRESHOLD) {
@@ -95,24 +88,82 @@ void loop() {
     }
   }
 
+  // Update fan-related information and time on the LCD
+  updateFanInfo();
   updateInfoISR();
 
-  delay(50); // added delay to stop serial overload
+  delay(1000); // Update information every second
+}
+
+void updateFanInfo() {
+  lcd.setCursor(0, 1);
+  lcd.print("Fan: ");
+  lcd.print(getFanSpeedText());
+  lcd.print(" ");
+  lcd.print(getRotationDirection());
+  lcd.print(" ");
+  lcd.print(getFrequency());
+}
+
+String getFrequency() {
+  // Read the value from the sound sensor analog pin
+  int soundSensorValue = analogRead(SOUND_SENSOR_APIN);
+
+  // Perform basic frequency analysis using analogRead values
+  int frequency = map(soundSensorValue, 0, 1023, 20, 2000); // Map analogRead range to frequency range
+
+  return String(frequency) + " Hz";
+}
+
+String getFanSpeedText() {
+  switch (fanSpeed) {
+    case 0:
+      return "0";
+    case 1:
+      return "1/2";
+    case 2:
+      return "3/4";
+    case 3:
+      return "FULL";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+String getRotationDirection() {
+  if (fanSpeed > 0) {
+    return "C";
+  } else if (fanSpeed < 0) {
+    return "CC";
+  } else {
+    return "S";
+  }
 }
 
 void updateInfoISR() {
-  DateTime now = rtc.now();
+  static unsigned long lastUpdateMillis = 0;
+  const unsigned long updateInterval = 1000;  // Update interval in milliseconds
 
-  // Display the time on the LCD
-  lcd.setCursor(0, 2);
-  lcd.print("Time:");
-  lcd.print(now.hour() - 1, DEC); // fixed an issue possibly caused by daylight savings
-  lcd.print(':');
-  lcd.print(now.minute(), DEC);
-  lcd.print(':');
-  lcd.print(now.second(), DEC);
+  unsigned long currentMillis = millis();
 
-  // Other information update tasks...
+  // Check if the specified update interval has passed
+  if (currentMillis - lastUpdateMillis >= updateInterval) {
+    DateTime now = rtc.now();
+
+    // Display the time on the LCD
+    lcd.setCursor(0, 0);
+    lcd.print("Time: ");
+    lcd.print(now.hour(), DEC);
+    lcd.print(':');
+    lcd.print((now.minute() < 10) ? "0" : "");
+    lcd.print(now.minute(), DEC);
+    lcd.print(':');
+    lcd.print((now.second() < 10) ? "0" : "");
+    lcd.print(now.second(), DEC);
+
+    // Update the last update time
+    lastUpdateMillis = currentMillis;
+  }
 }
 
 void stopMotor() {
@@ -168,30 +219,6 @@ void runMotorFullSpeed() {
   digitalWrite(MOTOR_PIN1, HIGH);
   digitalWrite(MOTOR_PIN2, HIGH);
   analogWrite(MOTOR_ENABLE_PIN, FULL_SPEED);
-}
-
-int ssvSimulation(){// used to test rest of circuit while issue with dianosing sound circuit
-    DateTime now = rtc.now();
-    int testFreq = 0;
-
-      if(now.second() < 20){
-
-        testFreq = 262;
-
-        return testFreq;
-      }
-      if(now.second() > 40){
-
-        testFreq = 440;
-
-        return testFreq;
-      }
-      if((now.second() > 20) && ( now.second() < 40)){
-
-        testFreq = 600 ;
-
-        return testFreq;
-      }
 }
 
 // Function to check if a value is within a specified range with an allowed error

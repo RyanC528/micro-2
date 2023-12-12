@@ -8,8 +8,8 @@ arduinoFFT FFT = arduinoFFT();
 
 // Define pins for DC motor using L293D
 #define MOTOR_ENABLE_PIN 5
-#define MOTOR_PIN1 4
-#define MOTOR_PIN2 3
+#define MOTOR_PIN1 3
+#define MOTOR_PIN2 4
 
 #define SOUND_SENSOR_APIN A0
 #define BUTTON_PIN 2 // Example button pin, change as needed

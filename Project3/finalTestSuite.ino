@@ -112,6 +112,7 @@ void processSerialInput(char input) {
       break;
     case 'C':
     case 'c':
+      fanClockwise = true;  // Update fan direction to clockwise
       fanRunning = true;
       lcd.clear();
       updateFanDirection();
@@ -122,6 +123,7 @@ void processSerialInput(char input) {
       break;
     case 'R':
     case 'r':
+      fanClockwise = false;  // Update fan direction to counterclockwise
       fanRunning = true;
       lcd.clear();
       updateFanDirection();
@@ -189,27 +191,24 @@ String getFrequency() {
 }
 
 String getFanSpeedText() {
-  switch (fanSpeed) {
-    case 0:
-      return "0";
-    case 1:
-      return "1/2";
-    case 2:
-      return "3/4";
-    case 3:
-      return "FULL";
-    default:
-      return "UNKNOWN";
+  if (fanSpeed == 0) {
+    return "0";
+  } else if (fanSpeed == HALF_SPEED) {
+    return "1/2";
+  } else if (fanSpeed == THREE_QUARTER_SPEED) {
+    return "3/4";
+  } else if (fanSpeed == FULL_SPEED) {
+    return "FULL";
+  } else {
+    return "UNKNOWN";
   }
 }
 
 String getRotationDirection() {
-  if (fanSpeed > 0) {
+  if (fanClockwise) {
     return "C";
-  } else if (fanSpeed < 0) {
-    return "CC";
   } else {
-    return "S";
+    return "CC";
   }
 }
 
@@ -249,6 +248,7 @@ void increaseFanSpeed() {
   if (fanSpeed < 3) {
     fanSpeed++;
     updateMotorSpeed();
+    updateFanDirection();  // Add this line to update the fan direction
   }
 }
 
@@ -256,6 +256,7 @@ void decreaseFanSpeed() {
   if (fanSpeed > 0) {
     fanSpeed--;
     updateMotorSpeed();
+    updateFanDirection();  // Add this line to update the fan direction
   }
 }
 
@@ -274,6 +275,7 @@ void updateMotorSpeed() {
       runMotorFullSpeed();
       break;
   }
+  updateFanDirection();  // Add this line to update the fan direction
 }
 
 void runMotorHalfSpeed() {
@@ -298,9 +300,11 @@ void updateFanDirection() {
   if (fanClockwise) {
     digitalWrite(DIRA, HIGH);
     digitalWrite(DIRB, LOW);
+    Serial.println("Fan Direction: Clockwise (C)");
   } else {
     digitalWrite(DIRA, LOW);
     digitalWrite(DIRB, HIGH);
+    Serial.println("Fan Direction: Counterclockwise (CC)");
   }
 }
 

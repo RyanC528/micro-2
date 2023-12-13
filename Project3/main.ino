@@ -22,7 +22,7 @@ arduinoFFT FFT = arduinoFFT();
 #define LCD_READ 28
 
 // Motor speed levels
-#define FULL_SPEED 255
+#define FULL_SPEED 250//slightly less than full to prevent crashes
 #define THREE_QUARTER_SPEED 192
 #define HALF_SPEED 128
 #define STOPPED 0
@@ -74,19 +74,21 @@ void setup() {
 
 void loop() {
   // Read the value from the sound sensor analog pin
-  int soundSensorValue = analogRead(SOUND_SENSOR_APIN);
+  int soundSensorValue = ssvSimulation();
 
   // Use the sound sensor value to adjust fan speed
-  if (soundSensorValue > SOUND_THRESHOLD) {
     // Perform basic frequency analysis using analogRead values
-    int frequency = map(soundSensorValue, 0, 1023, 20, 2000); // Map analogRead range to frequency range
+    int frequency = soundSensorValue; // Map analogRead range to frequency range
     // Check if the frequency matches the target notes with the allowed error
-    if (isInRange(frequency, TARGET_NOTE_C4)) {
+    
+    if (frequency == int(TARGET_NOTE_C4)) {
       increaseFanSpeed();
-    } else if (isInRange(frequency, TARGET_NOTE_A4)) {
+      Serial.print("GIB SPEED ");
+    } else if (frequency == int(TARGET_NOTE_A4)) {
       decreaseFanSpeed();
+      Serial.print("TAKE SPED ");
     }
-  }
+
 
   // Update fan-related information and time on the LCD
   updateFanInfo();
@@ -107,12 +109,11 @@ void updateFanInfo() {
 
 String getFrequency() {
   // Read the value from the sound sensor analog pin
-  int soundSensorValue = analogRead(SOUND_SENSOR_APIN);
+  int soundSensorValue = ssvSimulation();
 
-  // Perform basic frequency analysis using analogRead values
-  int frequency = map(soundSensorValue, 0, 1023, 20, 2000); // Map analogRead range to frequency range
+  // Perform basic frequency analysis using analogRead values // Map analogRead range to frequency range
 
-  return String(frequency) + " Hz";
+  return String(soundSensorValue) + " Hz";
 }
 
 String getFanSpeedText() {
@@ -167,12 +168,14 @@ void updateInfoISR() {
 }
 
 void stopMotor() {
+  Serial.print("STAHP");
   digitalWrite(MOTOR_PIN1, LOW);
   digitalWrite(MOTOR_PIN2, LOW);
   analogWrite(MOTOR_ENABLE_PIN, 0);
 }
 
 void increaseFanSpeed() {
+  Serial.print("MOAR SPEED");
   if (fanSpeed < 3) {
     fanSpeed++;
     updateMotorSpeed();
@@ -180,6 +183,7 @@ void increaseFanSpeed() {
 }
 
 void decreaseFanSpeed() {
+  Serial.print("SLOW DOWN ");
   if (fanSpeed > 0) {
     fanSpeed--;
     updateMotorSpeed();
@@ -187,6 +191,7 @@ void decreaseFanSpeed() {
 }
 
 void updateMotorSpeed() {
+  Serial.print("UPDATING MOTOR ");
   switch (fanSpeed) {
     case 0:
       stopMotor();
@@ -204,21 +209,48 @@ void updateMotorSpeed() {
 }
 
 void runMotorHalfSpeed() {
+  Serial.print("50% SPEED ");
   digitalWrite(MOTOR_PIN1, HIGH);
   digitalWrite(MOTOR_PIN2, LOW);
   analogWrite(MOTOR_ENABLE_PIN, HALF_SPEED);
 }
 
 void runMotorThreeQuarterSpeed() {
+  Serial.print("75% SPEED ");
   digitalWrite(MOTOR_PIN1, LOW);
   digitalWrite(MOTOR_PIN2, HIGH);
   analogWrite(MOTOR_ENABLE_PIN, THREE_QUARTER_SPEED);
 }
 
 void runMotorFullSpeed() {
+  Serial.print("FULL SPEED ");
   digitalWrite(MOTOR_PIN1, HIGH);
   digitalWrite(MOTOR_PIN2, HIGH);
   analogWrite(MOTOR_ENABLE_PIN, FULL_SPEED);
+}
+
+int ssvSimulation(){// used to test rest of circuit while issue with dianosing sound circuit
+    DateTime now = rtc.now();
+    int testFreq = 0;
+
+      if(now.second() < 20){
+
+        testFreq = 262;
+
+        return testFreq;
+      }
+      if(now.second() > 40){
+
+        testFreq = 440;
+
+        return testFreq;
+      }
+      if((now.second() >= 20) && ( now.second() <= 40)){
+
+        testFreq = 600 ;
+
+        return testFreq;
+      }
 }
 
 // Function to check if a value is within a specified range with an allowed error

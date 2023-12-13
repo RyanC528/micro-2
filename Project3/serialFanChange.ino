@@ -61,52 +61,9 @@ void setup() {
 
 void loop() {
   // Check for serial input to change fan direction or speed
-  while (Serial.available() > 0) {
+  if (Serial.available() > 0) {
     char input = Serial.read();
-    if (input == 'E' || input == 'e'){
-      analogWrite(ENABLE, HIGH);
-    }
-    else if (input == 'C' || input == 'c') {
-      fanClockwise = true;
-      lcd.clear();
-      updateFanDirection();
-      updateInfoISR();
-      digitalWrite(DIRA, LOW);
-      digitalWrite(DIRB, HIGH);
-    } else if (input == 'R' || input == 'r') {
-      fanClockwise = false;
-      lcd.clear();
-      updateFanDirection();
-      updateInfoISR();
-    } else if (input == '0') {
-      fanSpeed = STOPPED;
-      fanRunning = false;
-      lcd.clear();
-      updateFanInfo();
-      updateInfoISR();
-      analogWrite(ENABLE, 0);
-    } else if (input == '1') {
-      fanSpeed = HALF_SPEED;
-      fanRunning = true;
-      lcd.clear();
-      updateFanInfo();
-      updateInfoISR();
-      analogWrite(ENABLE, HALF_SPEED);
-    } else if (input == '2') {
-      fanSpeed = THREE_QUARTER_SPEED;
-      fanRunning = true;
-      lcd.clear();
-      updateFanInfo();
-      updateInfoISR();
-      analogWrite(ENABLE, THREE_QUARTER_SPEED);
-    } else if (input == '3') {
-      fanSpeed = FULL_SPEED;
-      fanRunning = true;
-      lcd.clear();
-      updateFanInfo();
-      updateInfoISR();
-      analogWrite(ENABLE, FULL_SPEED);
-    }
+    processSerialInput(input);
   }
 
   // Update fan-related information and time on the LCD
@@ -114,6 +71,71 @@ void loop() {
   updateInfoISR();
 
   delay(1000); // Update information every second
+}
+
+void processSerialInput(char input) {
+  switch (input) {
+    case 'E':
+    case 'e':
+      analogWrite(ENABLE, HIGH);
+      break;
+    case 'C':
+    case 'c':
+      fanClockwise = true;
+      lcd.clear();
+      updateFanDirection();
+      updateInfoISR();
+      digitalWrite(DIRA, LOW);
+      digitalWrite(DIRB, HIGH);
+      delay(1000);
+      break;
+    case 'R':
+    case 'r':
+      fanClockwise = false;
+      lcd.clear();
+      updateFanDirection();
+      updateInfoISR();
+      digitalWrite(DIRA, HIGH);
+      digitalWrite(DIRB, LOW);
+      delay(1000);
+      break;
+    case '0':
+      fanSpeed = STOPPED;
+      fanRunning = false;
+      lcd.clear();
+      updateFanInfo();
+      updateInfoISR();
+      analogWrite(ENABLE, 0);
+      delay(1000);
+      break;
+    case '1':
+      fanSpeed = HALF_SPEED;
+      fanRunning = true;
+      lcd.clear();
+      updateFanInfo();
+      updateInfoISR();
+      analogWrite(ENABLE, HALF_SPEED);
+      delay(1000);
+      break;
+    case '2':
+      fanSpeed = THREE_QUARTER_SPEED;
+      fanRunning = true;
+      lcd.clear();
+      updateFanInfo();
+      updateInfoISR();
+      analogWrite(ENABLE, THREE_QUARTER_SPEED);
+      delay(1000);
+      break;
+    case '3':
+      fanSpeed = FULL_SPEED;
+      fanRunning = true;
+      lcd.clear();
+      updateFanInfo();
+      updateInfoISR();
+      analogWrite(ENABLE, FULL_SPEED);
+      delay(1000);
+      break;
+  }
 }
 
 void updateFanInfo() {
